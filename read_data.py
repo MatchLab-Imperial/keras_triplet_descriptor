@@ -239,10 +239,10 @@ class DataGeneratorDesc(keras.utils.Sequence):
                 
     def __getitem__(self, index):
         y = np.zeros((self.batch_size, 1))
-        img_a = np.empty((self.batch_size, self.n_channels, *self.dim))
-        img_p = np.empty((self.batch_size, self.n_channels, *self.dim))
+        img_a = np.empty((self.batch_size, self.n_channels) + self.dim)
+        img_p = np.empty((self.batch_size, self.n_channels) + self.dim)
         if self.out_triplets:
-            img_n = np.empty((self.batch_size, self.n_channels, *self.dim))
+            img_n = np.empty((self.batch_size, self.n_channels) + self.dim)
         for i in range(self.batch_size):
             t = self.triplets[self.batch_size*index + i]    
             img_a_t, img_p_t, img_n_t = self.get_image(t)
