@@ -77,8 +77,8 @@ class DenoiseHPatches(keras.utils.Sequence):
 
     def __getitem__(self, index):
         y = np.zeros(self.batch_size)
-        img_clean = np.empty((self.batch_size, self.n_channels, *self.dim))
-        img_noise = np.empty((self.batch_size, self.n_channels, *self.dim))
+        img_clean = np.empty((self.batch_size, self.n_channels) + self.dim)
+        img_noise = np.empty((self.batch_size, self.n_channels) + self.dim)
 
         for i in range(self.batch_size):
             img, img_n = self.get_images(index*self.batch_size+i)    
