@@ -52,9 +52,7 @@ class DenoiseHPatches(keras.utils.Sequence):
                 
                 img_n = cv2.imread(im_path.replace('.png', '_noise.png'), 0)
                 im = cv2.imread(im_path,0)
-                N = im.shape[0]/65
-                im = cv2.resize(im, (32, int(N*32)))
-                img_n = cv2.resize(img_n, (32, int(N*32)))
+                N = im.shape[0]/32
                 self.sequences[im_path] = im
                 self.sequences_n[im_path] = img_n
                 for i in range(int(N)):
@@ -146,7 +144,7 @@ class hpatches_sequence_folder:
         for t in self.itr:
             im_path = os.path.join(base, t+noise_path+'.png')
             im = cv2.imread(im_path,0)
-            self.N = im.shape[0]/65
+            self.N = im.shape[0]/32
             setattr(self, t, np.split(im, self.N))
 
 

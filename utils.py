@@ -31,7 +31,7 @@ def generate_desc_csv(descriptor_model, denoise_model, seqs_test):
                        will pass noisy patch directly to the descriptor model
         seqs_test: CSVs will be generated for sequences in seq_test
     """
-    w = 65
+    w = 32
     bs = 128
     output_dir  = './out'
     if not os.path.exists(output_dir):
@@ -51,10 +51,10 @@ def generate_desc_csv(descriptor_model, denoise_model, seqs_test):
             for i,patch in enumerate(getattr(seq, tp)):
                 n_patches+=1
 
-            patches_for_net = np.zeros((n_patches, 64, 64, 1))
+            patches_for_net = np.zeros((n_patches, 32, 32, 1))
             uuu = 0
             for i,patch in enumerate(getattr(seq, tp)):            
-                patches_for_net[i,:,:, 0] = cv2.resize(patch[0:w,0:w],(64,64))
+                patches_for_net[i,:,:, 0] = cv2.resize(patch[0:w,0:w],(32,32))
             ###
             outs = []
             
@@ -74,11 +74,7 @@ def generate_desc_csv(descriptor_model, denoise_model, seqs_test):
                 if denoise_model:
                     data_a = np.clip(denoise_model.predict(data_a).astype(int), 0, 255).astype(np.float32)
 
-                data_r = np.zeros((data_a.shape[0], 32, 32, 1))
-                for i in range(data_a.shape[0]):
-                    data_r[i, :, :, 0] = cv2.resize(data_a[i, 0], (32, 32))
                 # compute output
-                
                 out_a = descriptor_model.predict(x=data_r)
                 outs.append(out_a.reshape(-1, 128))
 
