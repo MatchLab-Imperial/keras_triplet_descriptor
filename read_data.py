@@ -24,11 +24,11 @@ def plot_triplet(generator):
     a = next(iter(generator))
     index = np.random.randint(0, a[0]['a'].shape[0])
     plt.subplot(131)
-    plt.imshow(a[0]['a'][index,0], cmap='gray') 
+    plt.imshow(a[0]['a'][index,:,:,0], cmap='gray') 
     plt.subplot(132)
-    plt.imshow(a[0]['p'][index,0], cmap='gray') 
+    plt.imshow(a[0]['p'][index,:,:,0], cmap='gray') 
     plt.subplot(133)
-    plt.imshow(a[0]['n'][index,0], cmap='gray') 
+    plt.imshow(a[0]['n'][index,:,:,0], cmap='gray') 
     plt.show()
 
 class DenoiseHPatches(keras.utils.Sequence):
@@ -37,30 +37,34 @@ class DenoiseHPatches(keras.utils.Sequence):
     def __init__(self, seqs, batch_size = 32):
         self.all_paths = []
         self.batch_size = batch_size
-        self.dim = (64, 64)
+        self.dim = (32, 32)
         self.n_channels = 1
         self.sequences = {}
         self.sequences_n = {}
-        for base in seqs:
+        print('Loading dataset for denoising')
+        for base in tqdm(seqs):
             name = base.split('/')
             self.name = name[-1]
             self.base = base
             for t in self.itr:
                 im_path = os.path.join(base, t+'.png')
-                im = cv2.imread(im_path,0)
-                self.sequences[im_path] = im
+                
+                
                 img_n = cv2.imread(im_path.replace('.png', '_noise.png'), 0)
-                self.sequences_n[im_path] = img_n
+                im = cv2.imread(im_path,0)
                 N = im.shape[0]/65
+                im = cv2.resize(im, (32, int(N*32)))
+                img_n = cv2.resize(img_n, (32, int(N*32)))
+                self.sequences[im_path] = im
+                self.sequences_n[im_path] = img_n
                 for i in range(int(N)):
                     self.all_paths.append([os.path.join(base, t+'.png'), i])
-            print(base)
         self.on_epoch_end()
 
     def get_images(self, index):
         path, index_path = self.all_paths[index]
         img = self.sequences[path]
-        N = img.shape[0]/65
+        N = img.shape[0]/32
         img = np.split(img, N)[index_path]
         img = cv2.resize(img, self.dim)
         img = np.array(img, dtype=np.float)
@@ -77,13 +81,13 @@ class DenoiseHPatches(keras.utils.Sequence):
 
     def __getitem__(self, index):
         y = np.zeros(self.batch_size)
-        img_clean = np.empty((self.batch_size, self.n_channels) + self.dim)
-        img_noise = np.empty((self.batch_size, self.n_channels) + self.dim)
+        img_clean = np.empty((self.batch_size,) + self.dim + (self.n_channels,))
+        img_noise = np.empty((self.batch_size,) + self.dim + (self.n_channels,))
 
         for i in range(self.batch_size):
             img, img_n = self.get_images(index*self.batch_size+i)    
-            img_clean[i, 0] = img
-            img_noise[i, 0] = img_n
+            img_clean[i] = np.expand_dims(img, -1)
+            img_noise[i] = np.expand_dims(img_n, -1)
 
         return img_noise, img_clean    
 
@@ -109,9 +113,9 @@ class HPatches():
             list_dirs = self.train_fnames
         else:
             list_dirs = self.test_fnames
-        for directory in hpatches_sequences:
+        print('Loading dataset')
+        for directory in tqdm(hpatches_sequences):
            if (directory in list_dirs):
-            print(directory)
             for tp in tps:
                 sequence_path = os.path.join(data_dir, directory, tp)+'_noise.png'
                 image = cv2.imread(sequence_path, 0)
@@ -162,7 +166,7 @@ def generate_triplets(labels, num_triplets, batch_size):
     n_classes = unique_labels.shape[0]
     # add only unique indices in batch
     already_idxs = set()
-
+    print('Generating triplets')
     for x in tqdm(range(num_triplets)):
         if len(already_idxs) >= batch_size:
             already_idxs = set()
@@ -225,9 +229,9 @@ class DataGeneratorDesc(keras.utils.Sequence):
                 img_p = deepcopy(img_p.numpy()[:,:,::-1])
                 if self.out_triplets:
                     img_n = deepcopy(img_n.numpy()[:, :, ::-1])
-        img_a = np.expand_dims(np.expand_dims(img_a, 0), 0)
-        img_p = np.expand_dims(np.expand_dims(img_p, 0), 0)
-        img_n = np.expand_dims(np.expand_dims(img_n, 0), 0)             
+        img_a = np.expand_dims(img_a, -1)
+        img_p = np.expand_dims(img_p, -1)
+        img_n = np.expand_dims(img_n, -1)           
         if self.out_triplets:
             return img_a, img_p, img_n
         else:
@@ -239,10 +243,10 @@ class DataGeneratorDesc(keras.utils.Sequence):
                 
     def __getitem__(self, index):
         y = np.zeros((self.batch_size, 1))
-        img_a = np.empty((self.batch_size, self.n_channels) + self.dim)
-        img_p = np.empty((self.batch_size, self.n_channels) + self.dim)
+        img_a = np.empty((self.batch_size,) + self.dim + (self.n_channels,))
+        img_p = np.empty((self.batch_size,) + self.dim + (self.n_channels,))
         if self.out_triplets:
-            img_n = np.empty((self.batch_size, self.n_channels) + self.dim)
+            img_n = np.empty((self.batch_size,) + self.dim + (self.n_channels,))
         for i in range(self.batch_size):
             t = self.triplets[self.batch_size*index + i]    
             img_a_t, img_p_t, img_n_t = self.get_image(t)

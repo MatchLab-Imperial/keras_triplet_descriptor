@@ -3,7 +3,7 @@ import csv
 import cv2
 import numpy as np
 import os
-
+import tqdm
 
 def plot_denoise(denoise_model):
     """Plots a noisy patch, denoised patch and clean patch.
@@ -16,11 +16,11 @@ def plot_denoise(denoise_model):
     index = np.random.randint(0, imgs.shape[0])
     imgs_den = denoise_model.predict(imgs)
     plt.subplot(131)
-    plt.imshow(imgs[index,0], cmap='gray') 
+    plt.imshow(imgs[index,:,:,0], cmap='gray') 
     plt.subplot(132)
-    plt.imshow(imgs_den[index,0], cmap='gray') 
+    plt.imshow(imgs_den[index,:,:,0], cmap='gray') 
     plt.subplot(133)
-    plt.imshow(imgs_clean[index,0], cmap='gray')
+    plt.imshow(imgs_clean[index,:,:,0], cmap='gray')
     plt.show()
 
 def generate_desc_csv(descriptor_model, denoise_model, seqs_test):
@@ -36,7 +36,8 @@ def generate_desc_csv(descriptor_model, denoise_model, seqs_test):
     output_dir  = './out'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    for seq_path in seqs_test:
+    print('Generating CSV files...')
+    for seq_path in tqdm(seqs_test):
         curr_desc_name = 'res'
         seq = hpatches_sequence_folder(seq_path, noise = 1)
 
@@ -44,17 +45,16 @@ def generate_desc_csv(descriptor_model, denoise_model, seqs_test):
         if not os.path.exists(path):
             os.makedirs(path)
         for tp in tps:
-            print(seq.name+'/'+tp)
             if os.path.isfile(os.path.join(path, tp+'.csv')):
                 continue
             n_patches = 0
             for i,patch in enumerate(getattr(seq, tp)):
                 n_patches+=1
 
-            patches_for_net = np.zeros((n_patches, 1, 64, 64))
+            patches_for_net = np.zeros((n_patches, 64, 64, 1))
             uuu = 0
             for i,patch in enumerate(getattr(seq, tp)):            
-                patches_for_net[i,0,:,:] = cv2.resize(patch[0:w,0:w],(64,64))
+                patches_for_net[i,:,:, 0] = cv2.resize(patch[0:w,0:w],(64,64))
             ###
             outs = []
             
@@ -74,16 +74,15 @@ def generate_desc_csv(descriptor_model, denoise_model, seqs_test):
                 if denoise_model:
                     data_a = np.clip(denoise_model.predict(data_a).astype(int), 0, 255).astype(np.float32)
 
-                data_r = np.zeros((data_a.shape[0], 1, 32, 32))
+                data_r = np.zeros((data_a.shape[0], 32, 32, 1))
                 for i in range(data_a.shape[0]):
-                    data_r[i, 0] = cv2.resize(data_a[i, 0], (32, 32))
+                    data_r[i, :, :, 0] = cv2.resize(data_a[i, 0], (32, 32))
                 # compute output
                 
                 out_a = descriptor_model.predict(x=data_r)
                 outs.append(out_a.reshape(-1, 128))
 
             res_desc = np.concatenate(outs)
-            print(res_desc.shape, n_patches)
             res_desc = np.reshape(res_desc, (n_patches, -1))
             out = np.reshape(res_desc, (n_patches,-1))
             np.savetxt(os.path.join(path,tp+'.csv'), out, delimiter=';', fmt='%10.5f')   # X is an array
