@@ -3,7 +3,22 @@ import csv
 import cv2
 import numpy as np
 import os
-import tqdm
+from tqdm import tqdm
+
+
+
+
+def plot_triplet(generator):
+    import matplotlib.pyplot as plt
+    a = next(iter(generator))
+    index = np.random.randint(0, a[0]['a'].shape[0])
+    plt.subplot(131)
+    plt.imshow(a[0]['a'][index,:,:,0], cmap='gray') 
+    plt.subplot(132)
+    plt.imshow(a[0]['p'][index,:,:,0], cmap='gray') 
+    plt.subplot(133)
+    plt.imshow(a[0]['n'][index,:,:,0], cmap='gray') 
+    plt.show()
 
 def plot_denoise(denoise_model):
     """Plots a noisy patch, denoised patch and clean patch.
@@ -11,7 +26,7 @@ def plot_denoise(denoise_model):
         denoise_model: keras model to predict clean patch
     """
     import matplotlib.pyplot as plt
-    generator = DenoiseHPatches(['./hpatches-release/i_ajuntament'])
+    generator = DenoiseHPatches(['./hpatches/v_there'])
     imgs, imgs_clean = next(iter(generator))
     index = np.random.randint(0, imgs.shape[0])
     imgs_den = denoise_model.predict(imgs)
@@ -23,7 +38,7 @@ def plot_denoise(denoise_model):
     plt.imshow(imgs_clean[index,:,:,0], cmap='gray')
     plt.show()
 
-def generate_desc_csv(descriptor_model, denoise_model, seqs_test):
+def generate_desc_csv(descriptor_model, denoise_model, seqs_test, curr_desc_name = 'custom'):
     """Plots a noisy patch, denoised patch and clean patch.
     Args:
         descriptor_model: keras model used to generate descriptor
@@ -36,9 +51,8 @@ def generate_desc_csv(descriptor_model, denoise_model, seqs_test):
     output_dir  = './out'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    print('Generating CSV files...')
+    
     for seq_path in tqdm(seqs_test):
-        curr_desc_name = 'res'
         seq = hpatches_sequence_folder(seq_path, noise = 1)
 
         path = os.path.join(output_dir, os.path.join(curr_desc_name, seq.name))
@@ -75,7 +89,7 @@ def generate_desc_csv(descriptor_model, denoise_model, seqs_test):
                     data_a = np.clip(denoise_model.predict(data_a).astype(int), 0, 255).astype(np.float32)
 
                 # compute output
-                out_a = descriptor_model.predict(x=data_r)
+                out_a = descriptor_model.predict(x=data_a)
                 outs.append(out_a.reshape(-1, 128))
 
             res_desc = np.concatenate(outs)

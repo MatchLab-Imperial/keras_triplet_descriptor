@@ -19,18 +19,6 @@ tps = ['ref','e1','e2','e3','e4','e5','h1','h2','h3','h4','h5',\
 
 
 
-def plot_triplet(generator):
-    import matplotlib.pyplot as plt
-    a = next(iter(generator))
-    index = np.random.randint(0, a[0]['a'].shape[0])
-    plt.subplot(131)
-    plt.imshow(a[0]['a'][index,:,:,0], cmap='gray') 
-    plt.subplot(132)
-    plt.imshow(a[0]['p'][index,:,:,0], cmap='gray') 
-    plt.subplot(133)
-    plt.imshow(a[0]['n'][index,:,:,0], cmap='gray') 
-    plt.show()
-
 class DenoiseHPatches(keras.utils.Sequence):
     """Class for loading an HPatches sequence from a sequence folder"""
     itr = tps
@@ -41,15 +29,12 @@ class DenoiseHPatches(keras.utils.Sequence):
         self.n_channels = 1
         self.sequences = {}
         self.sequences_n = {}
-        print('Loading dataset for denoising')
         for base in tqdm(seqs):
             name = base.split('/')
             self.name = name[-1]
             self.base = base
             for t in self.itr:
                 im_path = os.path.join(base, t+'.png')
-                
-                
                 img_n = cv2.imread(im_path.replace('.png', '_noise.png'), 0)
                 im = cv2.imread(im_path,0)
                 N = im.shape[0]/32
@@ -93,43 +78,6 @@ class DenoiseHPatches(keras.utils.Sequence):
         # 'Updates indexes after each epoch'
         random.shuffle(self.all_paths)
 
-class HPatches():
-    def __init__(self, train=True, transform=None, download=False, train_fnames = [], test_fnames = []):
-        self.train = train
-        self.transform = transform
-        self.train_fnames = train_fnames
-        self.test_fnames = test_fnames
-
-    def read_image_file(self, data_dir, train = 1):
-        """Return a Tensor containing the patches
-        """
-        patches = []
-        labels = []
-        counter = 0
-        hpatches_sequences = [x[1] for x in os.walk(data_dir)][0]
-        if train:
-            list_dirs = self.train_fnames
-        else:
-            list_dirs = self.test_fnames
-        print('Loading dataset')
-        for directory in tqdm(hpatches_sequences):
-           if (directory in list_dirs):
-            for tp in tps:
-                sequence_path = os.path.join(data_dir, directory, tp)+'_noise.png'
-                image = cv2.imread(sequence_path, 0)
-                h, w = image.shape
-                n_patches = int(h / w)
-                for i in range(n_patches):
-                    patch = image[i * (w): (i + 1) * (w), 0:w]
-                    patch = cv2.resize(patch, (32, 32))
-                    patch = np.array(patch, dtype=np.uint8)
-                    patches.append(patch)
-                    labels.append(i+counter)
-            counter += n_patches
-
-        print(counter)
-        return np.array(patches, dtype=np.uint8), labels
-
 class hpatches_sequence_folder:
     """Class for loading an HPatches sequence from a sequence folder"""
     itr = tps
@@ -157,14 +105,13 @@ def generate_triplets(labels, num_triplets, batch_size):
                 inds[ind] = []
             inds[ind].append(idx)
         return inds
-
     triplets = []
     indices = create_indices(np.asarray(labels))
     unique_labels = np.unique(np.asarray(labels))
     n_classes = unique_labels.shape[0]
     # add only unique indices in batch
     already_idxs = set()
-    print('Generating triplets')
+    
     for x in tqdm(range(num_triplets)):
         if len(already_idxs) >= batch_size:
             already_idxs = set()
@@ -186,12 +133,51 @@ def generate_triplets(labels, num_triplets, batch_size):
         triplets.append([indices[c1][n1], indices[c1][n2], indices[c2][n3]])
     return np.array(triplets)
 
+
+
+class HPatches():
+    def __init__(self, train=True, transform=None, download=False, train_fnames = [], test_fnames = []):
+        self.train = train
+        self.transform = transform
+        self.train_fnames = train_fnames
+        self.test_fnames = test_fnames
+
+    def read_image_file(self, data_dir, train = 1):
+        """Return a Tensor containing the patches
+        """
+        patches = []
+        labels = []
+        counter = 0
+        hpatches_sequences = [x[1] for x in os.walk(data_dir)][0]
+        if train:
+            list_dirs = self.train_fnames
+        else:
+            list_dirs = self.test_fnames
+        
+        for directory in tqdm(hpatches_sequences):
+           if (directory in list_dirs):
+            for tp in tps:
+                sequence_path = os.path.join(data_dir, directory, tp)+'_noise.png'
+                image = cv2.imread(sequence_path, 0)
+                h, w = image.shape
+                n_patches = int(h / w)
+                for i in range(n_patches):
+                    patch = image[i * (w): (i + 1) * (w), 0:w]
+                    patch = cv2.resize(patch, (32, 32))
+                    patch = np.array(patch, dtype=np.uint8)
+                    patches.append(patch)
+                    labels.append(i+counter)
+            counter += n_patches
+
+        print(counter)
+        return np.array(patches, dtype=np.uint8), labels
+
+
 class DataGeneratorDesc(keras.utils.Sequence):
     # 'Generates data for Keras'
     def __init__(self, data, labels, num_triplets = 1000000, batch_size=50, dim=(32,32), n_channels=1, shuffle=True):
         # 'Initialization'
         self.transform = None
-        self.fliprot = None
         self.out_triplets = True
         self.dim = dim
         self.batch_size = batch_size
@@ -213,20 +199,7 @@ class DataGeneratorDesc(keras.utils.Sequence):
         img_a = transform_img(a).astype(float)
         img_p = transform_img(p).astype(float)
         img_n = transform_img(n).astype(float)
-        # transform images if required
-        if self.fliprot:
-            do_flip = random.random() > 0.5
-            do_rot = random.random() > 0.5
 
-            if do_rot:
-                img_a = img_a.permute(0,2,1)
-                img_p = img_p.permute(0,2,1)
-
-            if do_flip:
-                img_a = deepcopy(img_a.numpy()[:,:,::-1])
-                img_p = deepcopy(img_p.numpy()[:,:,::-1])
-                if self.out_triplets:
-                    img_n = deepcopy(img_n.numpy()[:, :, ::-1])
         img_a = np.expand_dims(img_a, -1)
         img_p = np.expand_dims(img_p, -1)
         img_n = np.expand_dims(img_n, -1)           
@@ -236,7 +209,7 @@ class DataGeneratorDesc(keras.utils.Sequence):
             return img_a, img_p
 
     def __len__(self):
-        'Denotes the number of batches per epoch'
+        '''Denotes the number of batches per epoch'''
         return int(np.floor(len(self.triplets) / self.batch_size))
                 
     def __getitem__(self, index):
