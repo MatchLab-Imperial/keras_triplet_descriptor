@@ -49,12 +49,14 @@ class DenoiseHPatches(keras.utils.Sequence):
         img = self.sequences[path]
         N = img.shape[0]/32
         img = np.split(img, N)[index_path]
-        img = cv2.resize(img, self.dim)
+        # cv2.resize may not behave well with use_multiprocessing=True
+        # https://github.com/keras-team/keras/issues/7902
+        # img = cv2.resize(img, self.dim)
         img = np.array(img, dtype=np.float)
 
         img_n = self.sequences_n[path]
         img_n = np.split(img_n, int(N))[index_path]
-        img_n = cv2.resize(img_n, self.dim)
+        # img_n = cv2.resize(img_n, self.dim)
         img_n = np.array(img_n, dtype=np.float)
         return img, img_n
 
