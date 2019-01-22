@@ -17,23 +17,28 @@ In practice, when a detector extracts corresponding regions in different images,
 
 Following images show the reprojected easy/hard patches in the target images together with the extracted patches, which can be found in the original [github repository](https://github.com/hpatches/hpatches-dataset):
 
-![](./Images/images_easy.png  "")
-*Image 1: Visualization of the easy patches locations in the target images.*
+<p align="center">
+ <img src=./Images/images_easy.png> <br/>
+ <i>Image 1: Visualization of the easy patches locations in the target images.</i>
+</p>
+
+<p align="center">
+ <img src=./Images/patches_easy.png> <br/>
+ <i>Image 2: Extracted easy patches from the example sequence.</i>
+</p>
 
 
-![](./Images/patches_easy.png  "")
-*Image 2: Extracted easy patches from the example sequence.*
+<p align="center">
+ <img src=./Images/images_hard.png> <br/>
+ <i>Image 3: Visualization of the hard patches locations in the target images.</i>
+</p>
 
+<p align="center">
+ <img src=./Images/patches_hard.png> <br/>
+ <i>Image 4: Extracted hard patches from the example sequence.</i>
+</p>
 
-![](./Images/images_hard.png  "")
-*Image 3: Visualization of the hard patches locations in the target images.*
-
-
-![](./Images/patches_hard.png  "")
-*Image 4: Extracted hard patches from the example sequence.*
-<br />
 You can find more details on original HPatches dataset [here](https://arxiv.org/pdf/1704.05939.pdf).
-<br />
 
 ## N-HPatches Dataset
 
@@ -56,8 +61,10 @@ In order to train the denoising model, the baseline code uses the Mean Absolute 
 
 On the other hand, baseline code trains the descriptor based on the [Triplet loss](http://www.bmva.org/bmvc/2016/papers/paper119/paper119.pdf), which takes an anchor patch, a negative patch and a positive patch. The idea is to train the network so the descriptors from the anchor and positive patch have a low distance between them, and the negative and anchor patch has a large distance between them. In order to do so, the code generates three instances of the network (sharing the weights) and the training triplets. Further architectures or loss functions could be used in order to improve both steps separately, or even, merge them and optimize them together.
 
-![](./Images/Inference_time.png  "")
-*Image 5: Pipeline in inference time.*
+<p align="center">
+ <img src=./Images/Inference_time.png> <br/>
+ <i>Image 5: Pipeline in inference time.</i>
+</p>
 
 <br />
 
