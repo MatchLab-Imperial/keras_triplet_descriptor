@@ -17,19 +17,19 @@ In practice, when a detector extracts corresponding regions in different images,
 
 Following images show the reprojected easy/hard patches in the target images together with the extracted patches, which can be found in the original [github repository](https://github.com/hpatches/hpatches-dataset):
 
-![](/home/axel/Desktop/PhD/Projects/Deep_learning_course/keras_triplet_descriptor/Images/images_easy.png  "")
+![](./Images/images_easy.png  "")
 *Image 1: Visualization of the easy patches locations in the target images.*
 
 
-![](/home/axel/Desktop/PhD/Projects/Deep_learning_course/keras_triplet_descriptor/Images/patches_easy.png  "")
+![](./Images/patches_easy.png  "")
 *Image 2: Extracted easy patches from the example sequence.*
 
 
-![](/home/axel/Desktop/PhD/Projects/Deep_learning_course/keras_triplet_descriptor/Images/images_hard.png  "")
+![](./Images/images_hard.png  "")
 *Image 3: Visualization of the hard patches locations in the target images.*
 
 
-![](/home/axel/Desktop/PhD/Projects/Deep_learning_course/keras_triplet_descriptor/Images/patches_hard.png  "")
+![](./Images/patches_hard.png  "")
 *Image 4: Extracted hard patches from the example sequence.*
 <br />
 You can find more details on original HPatches dataset [here](https://arxiv.org/pdf/1704.05939.pdf).
@@ -56,7 +56,7 @@ In order to train the denoising model, the baseline code uses the Mean Absolute 
 
 On the other hand, baseline code trains the descriptor based on the [Triplet loss](http://www.bmva.org/bmvc/2016/papers/paper119/paper119.pdf), which takes an anchor patch, a negative patch and a positive patch. The idea is to train the network so the descriptors from the anchor and positive patch have a low distance between them, and the negative and anchor patch has a large distance between them. In order to do so, the code generates three instances of the network (sharing the weights) and the training triplets. Further architectures or loss functions could be used in order to improve both steps separately, or even, merge them and optimize them together.
 
-![](/home/axel/Desktop/PhD/Projects/Deep_learning_course/keras_triplet_descriptor/Images/Inference_time.png  "")
+![](./Images/Inference_time.png  "")
 *Image 5: Pipeline in inference time.*
 
 <br />
