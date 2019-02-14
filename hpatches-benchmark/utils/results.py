@@ -11,7 +11,7 @@ def results_verification(desc,splt):
     v = {'imbalanced':'ap'}
     res = dill.load(open(os.path.join("results", desc+"_verification_"+splt['name']+".p"), "rb"))
     for r in v:
-        print("%s - %s variant (%s) " % (blue(desc.upper()),r.capitalize(),v[r]))
+        # print("%s - %s variant (%s) " % (blue(desc.upper()),r.capitalize(),v[r]))
         heads = ["Noise","Inter","Intra"]
         results = []
         for t in ['e','h','t']:
