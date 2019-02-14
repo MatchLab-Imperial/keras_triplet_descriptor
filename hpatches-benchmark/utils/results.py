@@ -44,7 +44,7 @@ def results_matching(desc,splt):
 
 def results_retrieval(desc,splt):
     res = dill.load(open(os.path.join("results", desc+"_retrieval_"+splt['name']+".p"), "rb"))
-    print("%s - mAP 10K queries " % (blue(desc.upper())))
+    # print("%s - mAP 10K queries " % (blue(desc.upper())))
     n_q= float(len(res.keys()))
     heads = ['']
     mAP = dict.fromkeys(['e','h','t'])
