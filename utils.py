@@ -6,8 +6,6 @@ import os
 from tqdm import tqdm
 
 
-
-
 def plot_triplet(generator):
     import matplotlib.pyplot as plt
     a = next(iter(generator))
@@ -59,8 +57,6 @@ def generate_desc_csv(descriptor_model, denoise_model, seqs_test, curr_desc_name
         if not os.path.exists(path):
             os.makedirs(path)
         for tp in tps:
-            if os.path.isfile(os.path.join(path, tp+'.csv')):
-                continue
             n_patches = 0
             for i,patch in enumerate(getattr(seq, tp)):
                 n_patches+=1
