@@ -145,7 +145,7 @@ class HPatches():
 
     def denoise_patches(self, patches):
         batch_size = 100
-        for i in tqdm(range(int(len(patches) / batch_size))):
+        for i in tqdm(range(int(len(patches) / batch_size)), file=sys.stdout):
             batch = patches[i * batch_size:(i + 1) * batch_size]
             batch = np.expand_dims(batch, -1)
             batch = np.clip(self.denoise_model.predict(batch).astype(int),
