@@ -6,18 +6,25 @@ import os
 from tqdm import tqdm
 
 
-
-
 def plot_triplet(generator):
     import matplotlib.pyplot as plt
     a = next(iter(generator))
     index = np.random.randint(0, a[0]['a'].shape[0])
     plt.subplot(131)
     plt.imshow(a[0]['a'][index,:,:,0], cmap='gray') 
+    plt.gca().set_xticks([])
+    plt.gca().set_yticks([])
+    plt.title('Anchor', fontsize=20)
     plt.subplot(132)
     plt.imshow(a[0]['p'][index,:,:,0], cmap='gray') 
+    plt.title('Positive', fontsize=20)
+    plt.gca().set_xticks([])
+    plt.gca().set_yticks([])
     plt.subplot(133)
     plt.imshow(a[0]['n'][index,:,:,0], cmap='gray') 
+    plt.title('Negative', fontsize=20)
+    plt.gca().set_xticks([])
+    plt.gca().set_yticks([])
     plt.show()
 
 def plot_denoise(denoise_model):
@@ -32,10 +39,19 @@ def plot_denoise(denoise_model):
     imgs_den = denoise_model.predict(imgs)
     plt.subplot(131)
     plt.imshow(imgs[index,:,:,0], cmap='gray') 
+    plt.title('Noisy', fontsize=20)
+    plt.gca().set_xticks([])
+    plt.gca().set_yticks([])
     plt.subplot(132)
     plt.imshow(imgs_den[index,:,:,0], cmap='gray') 
+    plt.title('Denoised', fontsize=20)
+    plt.gca().set_xticks([])
+    plt.gca().set_yticks([])
     plt.subplot(133)
     plt.imshow(imgs_clean[index,:,:,0], cmap='gray')
+    plt.title('Clean', fontsize=20)
+    plt.gca().set_xticks([])
+    plt.gca().set_yticks([])
     plt.show()
 
 def generate_desc_csv(descriptor_model, denoise_model, seqs_test, curr_desc_name = 'custom'):
@@ -59,8 +75,6 @@ def generate_desc_csv(descriptor_model, denoise_model, seqs_test, curr_desc_name
         if not os.path.exists(path):
             os.makedirs(path)
         for tp in tps:
-            if os.path.isfile(os.path.join(path, tp+'.csv')):
-                continue
             n_patches = 0
             for i,patch in enumerate(getattr(seq, tp)):
                 n_patches+=1
