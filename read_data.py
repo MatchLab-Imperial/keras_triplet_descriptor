@@ -161,6 +161,13 @@ class HPatches():
     def read_image_file(self, data_dir, train = 1):
         """Return a Tensor containing the patches
         """
+        if self.denoise_model and not self.use_clean:
+            print('Using denoised patches')
+        elif not self.denoise_model and not self.use_clean:
+            print('Using noisy patches')
+        elif self.use_clean:
+            print('Using clean patches')
+        sys.stdout.flush()
         patches = []
         labels = []
         counter = 0
@@ -170,7 +177,7 @@ class HPatches():
         else:
             list_dirs = self.test_fnames
 
-        for directory in tqdm(hpatches_sequences):
+        for directory in tqdm(hpatches_sequences, file=sys.stdout):
            if (directory in list_dirs):
             for tp in tps:
                 if self.use_clean:
@@ -188,9 +195,7 @@ class HPatches():
                     labels.append(i + counter)
             counter += n_patches
 
-        print(counter)
         patches = np.array(patches, dtype=np.uint8)
-        print(patches.shape)
         if self.denoise_model and not self.use_clean:
             print('Denoising patches...')
             patches = self.denoise_patches(patches)
