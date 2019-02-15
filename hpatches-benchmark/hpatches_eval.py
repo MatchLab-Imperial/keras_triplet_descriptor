@@ -16,7 +16,6 @@ Options:
   --dist=<>         Distance name. Valid are {L1,L2}. [default: L2]
   --delimiter=<>    Delimiter used in the csv files. [default: ,]
   --pcapl=<>        Compute results for pca-power law descr. [default: no]
-
 For more visit: https://github.com/hpatches/
 """
 from utils.hpatch import *
@@ -56,12 +55,8 @@ if __name__ == '__main__':
 
     for t in opts['--task']:
         res_path = os.path.join(results_dir, descr_name+"_"+t+"_"+splt['name']+".p")
-        if os.path.exists(res_path):
-            print("Results for the %s, %s task, split %s, already cached!" %\
-                  (descr_name,t,splt['name']))
-        else:
-            res = methods[t](descr,splt)
-            dill.dump(res, open(res_path, "wb"))
+        res = methods[t](descr,splt)
+        dill.dump(res, open(res_path, "wb"))
 
     # do the PCA/power-law evaluation if wanted
     if opts['--pcapl']!='no':

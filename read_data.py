@@ -77,7 +77,7 @@ class DenoiseHPatches(keras.utils.Sequence):
 class hpatches_sequence_folder:
     """Class for loading an HPatches sequence from a sequence folder"""
     itr = tps
-    def __init__(self, base, noise = 1):
+    def __init__(self, base, noise=1):
         name = base.split('/')
         self.name = name[-1]
         self.base = base
