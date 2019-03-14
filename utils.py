@@ -72,7 +72,8 @@ def generate_desc_csv(descriptor_model, seqs_test, denoise_model=None, use_clean
         denoise_model = None
     else:
         noisy_patches = 1
-    for seq_path in tqdm(seqs_test):
+    from tqdm import tqdm_notebook
+    for seq_path in tqdm_notebook(seqs_test):
         seq = hpatches_sequence_folder(seq_path, noise=noisy_patches)
 
         path = os.path.join(output_dir, os.path.join(curr_desc_name, seq.name))
@@ -113,3 +114,39 @@ def generate_desc_csv(descriptor_model, seqs_test, denoise_model=None, use_clean
             res_desc = np.reshape(res_desc, (n_patches, -1))
             out = np.reshape(res_desc, (n_patches, -1))
             np.savetxt(os.path.join(path,tp+'.csv'), out, delimiter=';', fmt='%10.5f')   # X is an array
+
+
+def generate_desc_csv_test(descriptor_model, denoise_model=None, curr_desc_name='custom'):
+    """Plots a noisy patch, denoised patch and clean patch.
+    Args:
+        descriptor_model: keras model used to generate descriptor
+        denoise_model: keras model used to predict clean patch. If None,
+                       will pass noisy patch directly to the descriptor model
+        seqs_test: CSVs will be generated for sequences in seq_test
+    """
+    w = 32
+    bs = 128
+    output_dir = './test_desc'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    import glob
+    from tqdm import tqdm_notebook
+    images = glob.glob('./test_data'+'/*')
+    n_images = len(images)
+    n_batches = n_images / bs + 1
+    for n_batch in tqdm_notebook(range(n_batches)):
+        if n_batch == n_batches - 1:
+            batch_files = images[n_batch*bs:]
+        else:
+            batch_files = images[n_batch*bs:(n_batch+1)*bs]
+        data_a = np.zeros((bs, 32, 32, 1))
+        for i, img_path in enumerate(batch_files):
+            data_a[i] = np.reshape(cv2.imread(img_path, 0), (32, 32, 1))
+        if denoise_model:
+            data_a = np.clip(denoise_model.predict(data_a).astype(int), 0, 255).astype(np.float32)
+
+        # compute output
+        out_a = descriptor_model.predict(x=data_a)
+        for i, img_path in enumerate(batch_files):
+            file_name = img_path.split('/')[-1]
+            np.savetxt(os.path.join(output_dir,file_name.replace('.png', '.csv')), out_a[i], delimiter=';', fmt='%10.5f')   # X is an array
